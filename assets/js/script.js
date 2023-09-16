@@ -2,6 +2,8 @@ let searchFormEl = document.getElementById('search-form');
 let cityInputEl = document.getElementById('city-input');
 let searchHistoryEl = document.getElementById('search-history');
 let forecastEl = document.getElementById('forecast');
+let currentWeatherEl = document.getElementById('current-weather');
+
 const apiKey = 'e188f5a0353881e98e33e40c59aaa471'; 
 var cities;
 var cityName;
@@ -21,6 +23,7 @@ searchFormEl.addEventListener('click', function(event) {
         currentCity = cityName.trim().toLowerCase();
         GetCoordinates(currentCity);
         console.log(currentCityIndex);
+        GetCurrentWeather(cities[currentCityIndex]);
         GetForecast(cities[currentCityIndex]);
     }
 });
@@ -35,6 +38,7 @@ searchHistoryEl.addEventListener('click', function(event) {
                 currentCityIndex = i;
             }
         }
+        GetCurrentWeather(cities[currentCityIndex]);
         GetForecast(cities[currentCityIndex]);
     }
 })
@@ -94,13 +98,14 @@ function GetForecast(city) {
                     console.log(data);
                     let forecasts = [];
                     for (var x = 6 ; x < data.list.length; x += 8) {
+                        thisCity= city.name;
                         thisDate = FormatDate(data.list[x].dt_txt);
                         thisTemp = data.list[x].main.temp + ' °F';
                         iconCode = data.list[x].weather[0].icon;
                         thisIcon = 'https://openweathermap.org/img/wn/' + iconCode + '.png';
                         thisWind = data.list[x].wind.speed + ' MPH';
                         thisHumi = data.list[x].main.humidity + ' %';
-                        thisForecast = ForecastObjectify(thisDate, thisIcon, thisTemp, thisWind, thisHumi);
+                        thisForecast = WeatherObjectify(thisCity, thisDate, thisIcon, thisTemp, thisWind, thisHumi);
                         console.log(thisForecast);
                         forecasts.push(thisForecast);
                         console.log(forecasts);
@@ -116,15 +121,49 @@ function GetForecast(city) {
             alert('Unable to connect to the weather API');
         });
 }
-function ForecastObjectify(thisDate, thisIcon, thisTemp, thisWind, thisHumi) {
-    let forecast = {
+
+function GetCurrentWeather(city) {
+    let lat = city.lat.toFixed(4);
+    let lon = city.lon.toFixed(4);
+    let weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
+    fetch(weatherUrl)
+        .then(function(response) {
+            if (response.ok) {
+                response.json().then(function(data) {
+                    console.log(data);
+                    let thisCity = city.name;
+                    thisCity = thisCity[0].toUpperCase() + thisCity.substring(1);
+                    let thisDate = FormatDate((data.dt) * 1000)
+                    console.log(thisDate);
+                    let iconCode = data.weather[0].icon;
+                    let thisIcon = `https://openweathermap.org/img/wn/${iconCode}.png`;
+                    let thisTemp = data.main.temp + ' °F';
+                    let thisWind = data.wind.speed + 'MPH';
+                    let thisHumi = data.main.humidity + '%';
+                    let currentWeather = WeatherObjectify(thisCity, thisDate, thisIcon, thisTemp, thisWind, thisHumi);
+                    console.log(currentWeather);
+                    DisplayWeather(currentWeather);
+                })
+            }
+            else {
+                alert('Error ' + response.statusText);
+            }
+        })
+        .catch(function(error) {
+            alert('Unable to connect to the weather API');
+        });
+}
+
+function WeatherObjectify(thisCity, thisDate, thisIcon, thisTemp, thisWind, thisHumi) {
+    let weather = {
+        city: thisCity,
         date: thisDate,
         icon: thisIcon,
         temp: thisTemp,
         wind: thisWind,
         humi: thisHumi
     };
-    return forecast;
+    return weather;
 }
 
 function FormatDate(date) {
@@ -154,6 +193,20 @@ function DisplayForecast(forecasts) {
         forecastHumiEl.textContent = '';
         forecastHumiEl.textContent = forecasts[f].humi;
     }
+}
+function DisplayWeather(weather) {
+    currentWeatherEl.removeAttribute('hidden');
+    currentCityEl = document.getElementById('current-city-date');
+    currentIconEl = document.getElementById('current-weather-icon');
+    currentTempEl = document.getElementById('current-temp');
+    currentWindEl = document.getElementById('current-wind');
+    currentHumiEl = document.getElementById('current-humi');
+    cityDate = `${weather.city} (${weather.date})`;
+    currentCityEl.textContent = cityDate;
+    currentIconEl.setAttribute('src', weather.icon);
+    currentTempEl.textContent = weather.temp;
+    currentWindEl.textContent = weather.wind;
+    currentHumiEl.textContent = weather.humi; 
 }
 
 function DisplaySearchHistory(city) {
