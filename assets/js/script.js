@@ -44,7 +44,7 @@ searchHistoryEl.addEventListener('click', function(event) {
 })
 
 function GetCoordinates(cityName) {
-    let coordUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${cityName}&limit=1&appid=${apiKey}`;
+    let coordUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${cityName}&limit=1&appid=${apiKey}`;
     var citySearched = false;
     for (var c = 0; c < cities.length; c++) {
         console.log(cities[c]);
@@ -89,7 +89,7 @@ function GetForecast(city) {
     let lon = city.lon.toFixed(4);
     console.log(lat);
     console.log(lon);
-    let forecastUrl = `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
+    let forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
     console.log(forecastUrl);
     fetch(forecastUrl)
         .then(function(response) {
